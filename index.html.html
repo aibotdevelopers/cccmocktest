@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI CCC Interactive Mock Test - Max Variety</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --secondary-color: #6c757d;
+            --light-bg-color: #f0f2f5;
+            --container-bg-color: #ffffff;
+            --text-color: #333;
+            --border-color: #dee2e6;
+            --correct-color: #28a745;
+            --incorrect-color: #dc3545;
+            --selected-option-bg: #e7f3ff;
+            --selected-option-border: #007bff;
+            --font-family: 'Poppins', sans-serif;
+            --header-height-desktop: 60px;
+            --header-height-mobile: 80px; 
+        }
+
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            background-color: var(--light-bg-color);
+            color: var(--text-color);
+        }
+
+        .screen-container {
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; min-height: 100vh;
+            padding: 20px; box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--container-bg-color);
+            padding: 25px 30px; 
+            border-radius: 12px; box-shadow: 0 6px 25px rgba(0, 0, 0, 0.08);
+            width: 100%; max-width: 700px; text-align: center;
+            margin-bottom: 30px;
+        }
+        .container.full-width {
+            max-width: none; padding: 0; box-shadow: none;
+            background-color: transparent;
+        }
+
+        h1, h2 {
+            color: var(--primary-color); margin-bottom: 20px; font-weight: 600;
+        }
+        h1 { font-size: 2em; }
+        h2 { font-size: 1.6em; }
+
+        .hidden { display: none !important; }
+
+        button {
+            background-color: var(--primary-color); color: white; border: none;
+            padding: 10px 20px; border-radius: 8px; cursor: pointer;
+            font-size: 0.95em; font-weight: 500; margin: 8px 5px;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        button:hover { background-color: var(--primary-hover-color); transform: translateY(-1px); }
+        button:disabled { background-color: #ccc; cursor: not-allowed; transform: none; }
+
+        input[type="number"] {
+            padding: 10px 12px; margin: 8px 0 20px 0;
+            border: 1px solid var(--border-color); border-radius: 8px;
+            width: calc(100% - 26px); box-sizing: border-box;
+            font-size: 1em; font-family: var(--font-family);
+        }
+        input[type="number"]:focus {
+            outline: none; border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+        }
+        label {
+            display: block; text-align: left; font-weight: 500;
+            margin-bottom: 5px; margin-left: 3px; font-size: 0.95em;
+        }
+
+        #config-screen-wrapper .container { max-width: 550px; }
+        #config-screen-wrapper h1 { margin-bottom: 25px; font-size: 1.8em; }
+        #config-screen-wrapper .welcome-text {
+            font-size: 1em; color: var(--secondary-color);
+            margin-bottom: 25px; line-height: 1.6;
+        }
+
+        #test-screen-content {
+            width: 100%;
+            height: calc(100vh - var(--header-height-desktop)); 
+            overflow-y: auto; scroll-snap-type: y mandatory; position: relative;
+        }
+        .question-section {
+            height: calc(100vh - var(--header-height-desktop)); 
+            scroll-snap-align: start; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 15px; box-sizing: border-box; position: relative;
+        }
+        .question-section-inner {
+            background-color: var(--container-bg-color);
+            padding: 20px 25px; border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            width: 100%; max-width: 700px; text-align: center;
+            overflow-y: auto; max-height: 90%; 
+        }
+
+        #test-header {
+            position: fixed; top: 0; left: 0; width: 100%;
+            background-color: rgba(255,255,255,0.97);
+            backdrop-filter: blur(8px);
+            padding: 0 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100; box-sizing: border-box;
+            height: var(--header-height-desktop); 
+        }
+        #timer { font-size: 1.1em; color: var(--incorrect-color); font-weight: 600; }
+        #progress-bar-container {
+            width: 150px; background-color: #e9ecef; border-radius: 20px;
+            height: 8px; overflow: hidden; margin: 0 10px;
+        }
+        #progress-bar {
+            height: 100%; background-color: var(--primary-color);
+            border-radius: 20px; transition: width 0.3s ease-in-out;
+        }
+        #language-selector { display: flex; align-items: center; }
+        #language-selector label {
+            margin-left: 3px; margin-right: 8px; cursor: pointer;
+            font-weight: 400; display: inline-flex; align-items: center;
+            font-size: 0.85em; 
+        }
+        #language-selector input[type="radio"] {
+            margin-right: 4px; accent-color: var(--primary-color); transform: scale(1);
+        }
+
+        .question-text-dynamic {
+            font-size: 1.1em; margin-bottom: 15px; font-weight: 500; line-height: 1.5;
+        }
+        .options-list { list-style: none; padding: 0; text-align: left; }
+        .options-list li {
+            background-color: #f8f9fa; border: 1px solid var(--border-color);
+            padding: 10px 12px; margin-bottom: 8px; border-radius: 8px;
+            cursor: pointer; transition: background-color 0.2s ease, border-color 0.2s ease;
+            font-size: 0.9em;
+        }
+        .options-list li:hover { background-color: #e9ecef; border-color: #adb5bd; }
+        .options-list li.selected {
+            background-color: var(--selected-option-bg); border-color: var(--selected-option-border);
+            color: var(--primary-color); font-weight: 600;
+        }
+        .navigation-controls {
+            margin-top: 15px; border-top: 1px solid var(--border-color);
+            padding-top: 12px; width: 100%; display: flex;
+            justify-content: space-between;
+        }
+        .navigation-controls button { padding: 8px 15px; font-size: 0.85em; }
+
+        #loading-message {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(240, 242, 245, 0.95);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 200; font-style: italic; font-size: 1.05em; text-align: center; padding: 20px;
+        }
+        .loader {
+            border: 5px solid #f3f3f3; border-top: 5px solid var(--primary-color);
+            border-radius: 50%; width: 40px; height: 40px;
+            animation: spin 1s linear infinite; margin-bottom: 15px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        #error-message { 
+            color: var(--incorrect-color); background-color: #f8d7da;
+            border: 1px solid #f5c6cb; padding: 15px; border-radius: 8px;
+            white-space: pre-wrap; margin: 20px;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 201; max-width: 80%; text-align: left;
+        }
+
+        #results-screen-wrapper .container { max-width: 650px; }
+        #results-screen-wrapper h2 { font-size: 1.6em; }
+        #review-container { max-height: 350px; overflow-y: auto; padding-right: 10px; margin-bottom: 20px; }
+        .result-item {
+            background-color: #f8f9fa; border: 1px solid var(--border-color);
+            padding: 15px; margin-bottom: 12px; border-radius: 8px;
+            text-align: left; box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+        }
+        .result-item p { margin: 6px 0; line-height: 1.5; font-size: 0.9em; }
+        .result-item strong { color: var(--primary-color); }
+        .correct-answer-text { color: var(--correct-color); font-weight: 600;}
+        .incorrect-answer-text { color: var(--incorrect-color); font-weight: 600;}
+        .user-choice { font-style: italic; color: var(--secondary-color); }
+        .status-pill { 
+            padding: 5px 10px; border-radius: 20px; font-size: 0.9em;
+            font-weight: 500; color: white; display: inline-block;
+        }
+        .status-pill.correct { background-color: var(--correct-color); }
+        .status-pill.incorrect { background-color: var(--incorrect-color); }
+        .status-pill.not-answered { background-color: var(--secondary-color); }
+
+        @media (max-width: 768px) {
+            .container { padding: 20px; }
+            h1 { font-size: 1.6em; }
+            h2 { font-size: 1.4em; }
+            #config-screen-wrapper .welcome-text { font-size: 0.9em; }
+            button { padding: 10px 15px; font-size: 0.9em; }
+            input[type="number"] { padding: 10px; font-size: 0.95em; }
+
+            #test-header {
+                height: var(--header-height-mobile); 
+                flex-direction: column; 
+                padding: 8px 10px;
+                justify-content: center; 
+            }
+            #test-header > div { margin-bottom: 5px; } 
+            #timer { font-size: 1em; margin-bottom: 5px !important; }
+            #progress-bar-container { width: 100%; margin: 0 0 5px 0; } 
+            #language-selector { justify-content: center; width: 100%; }
+            #language-selector label { font-size: 0.8em; margin-right: 5px;}
+
+            #test-screen-content, .question-section {
+                height: calc(100vh - var(--header-height-mobile)); 
+            }
+            .question-section-inner { padding: 15px; }
+            .question-text-dynamic { font-size: 1em; }
+            .options-list li { font-size: 0.85em; padding: 8px 10px; }
+            .navigation-controls button { padding: 8px 12px; font-size: 0.8em; }
+
+            #results-screen-wrapper .container { padding: 15px; }
+            #review-container { max-height: 300px; }
+            .result-item p { font-size: 0.85em; }
+        }
+
+        @media (max-width: 480px) {
+            h1 { font-size: 1.4em; }
+            h2 { font-size: 1.2em; }
+            #config-screen-wrapper .container { padding: 15px; }
+            .question-section-inner { padding: 10px 15px; }
+             #test-header {
+                padding-top: 5px;
+                padding-bottom: 5px;
+            }
+            #language-selector label { margin-right: 2px;}
+            #language-selector input[type="radio"] { transform: scale(0.9); margin-right: 2px;}
+
+            .navigation-controls { flex-direction: column; }
+            .navigation-controls button { width: 100%; margin-bottom: 8px; }
+            .navigation-controls button:last-child { margin-bottom: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="screen-container" id="config-screen-wrapper">
+        <div class="container">
+            <h1>AI Powered CCC Mock Test</h1>
+            <p class="welcome-text">
+                Welcome! Configure your CCC mock test. AI will generate bilingual (English & Hindi) questions for your preparation.
+            </p>
+            <label for="numQuestions">Number of Questions (1-50):</label>
+            <input type="number" id="numQuestions" value="10" min="1" max="50">
+            <label for="testDuration">Test Duration (minutes, 1-120):</label> 
+            <input type="number" id="testDuration" value="30" min="1" max="120">
+            <button id="start-test-btn">Start Test</button>
+            <p id="config-error" style="color: var(--incorrect-color); margin-top: 15px; font-weight: 500;"></p>
+        </div>
+    </div>
+
+    <div class="container full-width hidden" id="test-screen">
+        <div id="test-header">
+            <div id="timer">Time Left: 00:00</div>
+            <div id="progress-bar-container">
+                <div id="progress-bar"></div>
+            </div>
+            <div id="language-selector">
+                <label><input type="radio" name="language" value="en" checked> English</label>
+                <label><input type="radio" name="language" value="hi"> हिन्दी</label>
+            </div>
+        </div>
+        <div id="test-screen-content"></div>
+    </div>
+    
+    <div id="loading-message" class="hidden">
+        <div class="loader"></div>
+        Generating questions... This may take a moment, especially for many questions.
+    </div>
+    <div id="error-message" class="hidden"></div>
+
+    <div class="screen-container hidden" id="results-screen-wrapper">
+        <div class="container">
+            <h2>Test Results</h2>
+            <p id="score" style="font-size: 1.5em; font-weight: 600; margin-bottom: 10px;"></p>
+            <p id="time-taken" style="font-size: 1.1em; color: var(--secondary-color); margin-bottom: 25px;"></p>
+            <h3>Review Your Answers:</h3>
+            <div id="review-container" style="max-height: 400px; overflow-y: auto; padding-right: 10px;"></div>
+            <button id="restart-btn">Take Another Test</button>
+        </div>
+    </div>
+
+    <script>
+        const API_KEY = "AIzaSyBzMyYmWeEreCMBSyT9FF5l9LCFZgWG8to"; 
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${API_KEY}`;
+
+        const configScreenWrapper = document.getElementById('config-screen-wrapper');
+        const testScreen = document.getElementById('test-screen');
+        const resultsScreenWrapper = document.getElementById('results-screen-wrapper');
+        const numQuestionsInput = document.getElementById('numQuestions');
+        const testDurationInput = document.getElementById('testDuration');
+        const startTestBtn = document.getElementById('start-test-btn');
+        const configError = document.getElementById('config-error');
+        const languageSelector = document.getElementById('language-selector');
+        const timerDisplay = document.getElementById('timer');
+        const progressBar = document.getElementById('progress-bar');
+        const testScreenContent = document.getElementById('test-screen-content'); 
+        const loadingMessage = document.getElementById('loading-message');
+        const errorMessage = document.getElementById('error-message');
+        const scoreDisplay = document.getElementById('score');
+        const timeTakenDisplay = document.getElementById('time-taken');
+        const reviewContainer = document.getElementById('review-container');
+        const restartBtn = document.getElementById('restart-btn');
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let userAnswers = []; 
+        let score = 0;
+        let timerInterval;
+        let timeLeft = 0; 
+        let totalDuration = 0; 
+        let currentLanguage = 'en';
+        let intersectionObserver;
+        let isFetching = false;
+
+        function showScreen(screenToShow) {
+            configScreenWrapper.classList.add('hidden');
+            testScreen.classList.add('hidden');
+            resultsScreenWrapper.classList.add('hidden');
+            screenToShow.classList.remove('hidden');
+        }
+
+        startTestBtn.addEventListener('click', async () => {
+            if (isFetching) return; 
+            const numQuestions = parseInt(numQuestionsInput.value);
+            const durationMinutes = parseInt(testDurationInput.value);
+            configError.textContent = '';
+            if (isNaN(numQuestions) || numQuestions < 1 || numQuestions > 50) { 
+                configError.textContent = 'Number of questions must be between 1 and 50.'; return;
+            }
+            if (numQuestions > 25 && GEMINI_API_URL.includes('flash')) {
+                 console.warn("Requesting >25 bilingual Qs with Flash model may hit limits.");
+            }
+            if (isNaN(durationMinutes) || durationMinutes < 1 || durationMinutes > 120) { 
+                configError.textContent = 'Test duration must be between 1 and 120 minutes.'; return;
+            }
+            isFetching = true;
+            loadingMessage.classList.remove('hidden');
+            errorMessage.classList.add('hidden'); errorMessage.textContent = ''; 
+            totalDuration = durationMinutes * 60;
+            timeLeft = totalDuration;
+            currentLanguage = document.querySelector('input[name="language"]:checked').value;
+            try {
+                await fetchQuestionsFromGemini(numQuestions);
+                if (questions.length > 0) {
+                    userAnswers = new Array(questions.length).fill(null);
+                    buildQuestionSections();
+                    showScreen(testScreen);
+                    startQuiz();
+                } else { if (!errorMessage.textContent) { showError("No questions generated. Check console."); } }
+            } catch (error) { showError(`Init error: ${error.message}. Check console.`); } 
+            finally { loadingMessage.classList.add('hidden'); isFetching = false; }
+        });
+
+        languageSelector.addEventListener('change', (event) => {
+            currentLanguage = event.target.value;
+            if (questions.length > 0 && currentQuestionIndex >=0 && currentQuestionIndex < questions.length && !testScreen.classList.contains('hidden')) {
+                updateUIForCurrentQuestion();
+            }
+        });
+
+        function buildQuestionSections() {
+            testScreenContent.innerHTML = ''; 
+            questions.forEach((q, index) => {
+                const section = document.createElement('div');
+                section.className = 'question-section';
+                section.id = `question-section-${index}`;
+                const innerDiv = document.createElement('div');
+                innerDiv.className = 'question-section-inner';
+                section.appendChild(innerDiv);
+                testScreenContent.appendChild(section);
+            });
+            setupIntersectionObserver();
+        }
+        
+        function renderQuestionContent(q, index, targetInnerDiv) {
+            if (!q) { targetInnerDiv.innerHTML = `<p>Error: Question data missing for Q ${index + 1}.</p>`; return; }
+            targetInnerDiv.innerHTML = `
+                <p style="font-size: 0.9em; color: var(--secondary-color); margin-bottom: 5px;">Question ${index + 1} of ${questions.length}</p>
+                <p class="question-text-dynamic">${currentLanguage === 'hi' ? q.question_hi : q.question_en}</p>
+                <ul class="options-list">
+                    ${(currentLanguage === 'hi' ? q.options_hi : q.options_en).map(optionText => 
+                        `<li data-option-text="${escapeHTML(optionText)}">${optionText}</li>`).join('')}
+                </ul>
+                <div class="navigation-controls">
+                    <button class="prev-btn-q" data-idx="${index}" ${index === 0 ? 'disabled' : ''}>Previous</button>
+                    ${index === questions.length - 1 
+                        ? `<button class="submit-btn-q" style="background-color: var(--correct-color);">Submit Test</button>`
+                        : `<button class="next-btn-q" data-idx="${index}">Next</button>`}
+                </div>`;
+            targetInnerDiv.querySelectorAll('.options-list li').forEach(li => {
+                if (userAnswers[index] === li.dataset.optionText) li.classList.add('selected');
+                li.addEventListener('click', () => {
+                    userAnswers[index] = li.dataset.optionText;
+                    targetInnerDiv.querySelectorAll('.options-list li').forEach(opt => opt.classList.remove('selected'));
+                    li.classList.add('selected');
+                });
+            });
+            const prevBtnQ = targetInnerDiv.querySelector('.prev-btn-q');
+            if(prevBtnQ) prevBtnQ.addEventListener('click', () => navigateQuestion(-1));
+            const nextBtnQ = targetInnerDiv.querySelector('.next-btn-q');
+            if(nextBtnQ) nextBtnQ.addEventListener('click', () => navigateQuestion(1));
+            const submitBtnQ = targetInnerDiv.querySelector('.submit-btn-q');
+            if(submitBtnQ) submitBtnQ.addEventListener('click', () => { if (confirm('Submit test?')) endTest(); });
+        }
+        
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return '';
+            return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
+        }
+
+        function setupIntersectionObserver() {
+            if (intersectionObserver) intersectionObserver.disconnect();
+            const options = { root: testScreenContent, rootMargin: '0px', threshold: 0.5 };
+            intersectionObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const intersectingIndex = parseInt(entry.target.id.split('-')[2]);
+                        if (currentQuestionIndex !== intersectingIndex || !entry.target.querySelector('.question-text-dynamic')) { 
+                            currentQuestionIndex = intersectingIndex;
+                            updateUIForCurrentQuestion();
+                        }
+                    }
+                });
+            }, options);
+            document.querySelectorAll('.question-section').forEach(section => intersectionObserver.observe(section));
+        }
+        
+        function updateUIForCurrentQuestion() {
+            const currentSectionDiv = document.getElementById(`question-section-${currentQuestionIndex}`);
+            if(currentSectionDiv && questions[currentQuestionIndex]) {
+                renderQuestionContent(questions[currentQuestionIndex], currentQuestionIndex, currentSectionDiv.querySelector('.question-section-inner'));
+            }
+            updateProgressBar(); 
+        }
+
+        function navigateQuestion(direction) {
+            const newIndex = currentQuestionIndex + direction;
+            if (newIndex >= 0 && newIndex < questions.length) {
+                const targetSection = document.getElementById(`question-section-${newIndex}`);
+                if (targetSection) targetSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        async function fetchQuestionsFromGemini(count) {
+            const randomNonce = ` (Request ID: ${Date.now()}-${Math.random().toString(36).substring(2, 8)})`; // Unique string
+            const basePrompt = `Generate ${count} multiple-choice questions for CCC exam. Bilingual: English & Hindi. Topics: basic computers, internet, MS Office, digital finance, cybersecurity. 4 unique options each, bilingual. Correct answer text in both languages. Valid JSON array of objects: {"question_en":"", "question_hi":"", "options_en":[], "options_hi":[], "correctAnswer_en":"", "correctAnswer_hi":""}. Strict JSON. No extra text.`;
+            const promptWithNonce = basePrompt + randomNonce;
+            
+            let textForParsing = ""; 
+            try {
+                console.log(`Requesting ${count} bilingual questions with high temperature and nonce...`);
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({contents: [{ parts: [{ text: promptWithNonce }] }], 
+                        generationConfig: { 
+                            temperature: 0.95, // HIGH TEMPERATURE FOR VARIED QUESTIONS
+                            maxOutputTokens: 8192 
+                        }
+                    })
+                });
+                const responseData = await response.json().catch(err => { throw new Error(`API response not JSON. Status: ${response.status}.`); });
+                console.log("Full Gemini API Response:", responseData); 
+                if (!response.ok) throw new Error(`API failed: ${response.status}. ${responseData.error?.message || ''}`);
+                let candidate = responseData.candidates?.[0];
+                if (candidate?.finishReason && candidate.finishReason !== "STOP" && candidate.finishReason !== "MAX_TOKENS") { 
+                    throw new Error(`Content generation stopped. Reason: ${candidate.finishReason}.`);
+                }
+                if (candidate?.content?.parts[0]) {
+                    let rawJsonText = candidate.content.parts[0].text;
+                    textForParsing = rawJsonText.trim();
+                    if (textForParsing.startsWith("```json")) textForParsing = textForParsing.substring(7); 
+                    if (textForParsing.endsWith("```")) textForParsing = textForParsing.substring(0, textForParsing.length - 3);
+                    textForParsing = textForParsing.trim(); 
+                    const parsedQuestions = JSON.parse(textForParsing); 
+                    if (Array.isArray(parsedQuestions) && parsedQuestions.every(q => 
+                        q.question_en && q.question_hi && q.options_en?.length === 4 && q.options_hi?.length === 4 && q.correctAnswer_en && q.correctAnswer_hi
+                    )) {
+                        questions = parsedQuestions.slice(0, count); 
+                        if (questions.length === 0 && count > 0) throw new Error("AI generated empty list.");
+                        if (questions.length < count) console.warn(`AI gave ${questions.length}/${count} Qs.`);
+                    } else throw new Error("Generated JSON not in expected bilingual structure.");
+                } else throw new Error(`Unexpected AI response. FinishReason: ${candidate?.finishReason}. PromptFeedback: ${JSON.stringify(responseData.promptFeedback)}`);
+            } catch (error) {
+                console.error('Error fetchQuestions:', error, "Attempted to parse:", textForParsing.substring(0,200));
+                showError(`Fetch/Parse Error: ${error.message}.`);
+                questions = []; 
+            }
+        }
+        
+        function showError(message) {
+            loadingMessage.classList.add('hidden');
+            testScreenContent.innerHTML = ''; 
+            errorMessage.textContent = message;
+            errorMessage.classList.remove('hidden');
+            const existingBackButton = errorMessage.querySelector('button');
+            if (existingBackButton) existingBackButton.remove();
+            const existingBr = errorMessage.querySelector('br');
+            if (existingBr) existingBr.remove();
+            const backButton = document.createElement('button');
+            backButton.textContent = 'Back to Setup';
+            backButton.onclick = () => { showScreen(configScreenWrapper); errorMessage.textContent = ''; errorMessage.classList.add('hidden'); };
+            errorMessage.appendChild(document.createElement('br'));
+            errorMessage.appendChild(backButton);
+        }
+
+        function startQuiz() {
+            currentQuestionIndex = -1; 
+            const firstSection = document.getElementById('question-section-0');
+            if (firstSection && questions[0]) {
+                renderQuestionContent(questions[0], 0, firstSection.querySelector('.question-section-inner'));
+                currentQuestionIndex = 0; 
+                updateProgressBar(); 
+                setTimeout(() => { if(document.getElementById('question-section-0')) document.getElementById('question-section-0').scrollIntoView({behavior: "auto"}); }, 0); 
+            } else { showError("Error: First question section not found or no questions."); }
+            startTimer();
+        }
+
+        function calculateScore() {
+            score = 0;
+            questions.forEach((q, index) => {
+                const userAnswer = userAnswers[index];
+                if (userAnswer && (userAnswer === q.correctAnswer_en || userAnswer === q.correctAnswer_hi)) score++;
+            });
+        }
+        
+        function displayResults() {
+            const timeSpent = totalDuration - timeLeft;
+            const minutesSpent = Math.floor(timeSpent / 60);
+            const secondsSpent = timeSpent % 60;
+            const percentage = questions.length > 0 ? ((score / questions.length) * 100).toFixed(2) : 0;
+            scoreDisplay.innerHTML = `Your Score: <span style="color: var(--primary-color);">${score}</span> out of ${questions.length} (${percentage}%)`;
+            timeTakenDisplay.textContent = `Time Taken: ${String(minutesSpent).padStart(2, '0')}:${String(secondsSpent).padStart(2, '0')}`;
+            reviewContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                const resultItem = document.createElement('div');
+                resultItem.classList.add('result-item');
+                const userAnswer = userAnswers[index];
+                let statusText = "Not Answered"; let statusPillClass = "not-answered";
+                if (userAnswer) {
+                    if (userAnswer === q.correctAnswer_en || userAnswer === q.correctAnswer_hi) { statusText = "Correct"; statusPillClass = "correct"; }
+                    else { statusText = "Incorrect"; statusPillClass = "incorrect"; }
+                }
+                resultItem.innerHTML = `
+                    <p><strong>Question ${index + 1}:</strong></p>
+                    <p lang="en" style="margin-left: 10px;">EN: ${q.question_en}</p>
+                    <p lang="hi" style="margin-left: 10px;">HI: ${q.question_hi}</p>
+                    <p class="user-choice" style="margin-left: 10px;">Your Answer: ${userAnswer ? escapeHTML(userAnswer) : 'Not Answered'}</p>
+                    <p style="margin-left: 10px;">Correct (EN): <span class="correct-answer-text">${q.correctAnswer_en}</span></p>
+                    <p style="margin-left: 10px;">Correct (HI): <span class="correct-answer-text">${q.correctAnswer_hi}</span></p>
+                    <p style="margin-top:10px;">Status: <span class="status-pill ${statusPillClass}">${statusText}</span></p>`;
+                reviewContainer.appendChild(resultItem);
+            });
+        }
+        
+        function updateProgressBar() {
+            if (questions.length === 0) { progressBar.style.width = '0%'; return; }
+            const validCurrentIndex = Math.max(0, Math.min(currentQuestionIndex, questions.length - 1));
+            const progress = ((validCurrentIndex + 1) / questions.length) * 100;
+            progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval); updateTimerDisplay(); 
+            timerInterval = setInterval(() => {
+                timeLeft--; updateTimerDisplay();
+                if (timeLeft <= 0) { clearInterval(timerInterval); alert('Time is up!'); endTest(); }
+            }, 1000);
+        }
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `Time Left: ${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        }
+        function endTest() {
+            clearInterval(timerInterval);
+            if (intersectionObserver) intersectionObserver.disconnect();
+            calculateScore(); displayResults(); showScreen(resultsScreenWrapper);
+        }
+        restartBtn.addEventListener('click', () => {
+            questions = []; currentQuestionIndex = 0; userAnswers = []; score = 0; timeLeft = 0;
+            clearInterval(timerInterval);
+            if (intersectionObserver) intersectionObserver.disconnect();
+            progressBar.style.width = '0%'; timerDisplay.textContent = 'Time Left: 00:00';
+            errorMessage.classList.add('hidden'); errorMessage.textContent = '';
+            testScreenContent.innerHTML = ''; 
+            showScreen(configScreenWrapper);
+            document.querySelector('input[name="language"][value="en"]').checked = true;
+        });
+    </script>
+</body>
+</html>
